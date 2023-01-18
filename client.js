@@ -11,7 +11,8 @@ const diffAdjustInterval = 5
 const blockGenerationInterval = 2
 
 app.use(bodyParser.urlencoded({ extended: false }))
-app.use(express.static(path.join(__dirname, 'src')))
+app.use(express.static(path.join(__dirname, 'src/style')))
+app.use(express.static(path.join(__dirname, 'src/client')))
 
 if (process.argv.length < 3) {
   console.error('Missing port')

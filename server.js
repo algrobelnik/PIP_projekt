@@ -5,13 +5,10 @@ const io = require('socket.io')(server)
 const bodyParser = require('body-parser')
 const path = require('path')
 const client = require('socket.io-client')
-const Block = require('./block')
-const blockChain = []
-const diffAdjustInterval = 5
-const blockGenerationInterval = 2
 
 app.use(bodyParser.urlencoded({ extended: false }))
-app.use(express.static(path.join(__dirname, 'src')))
+app.use(express.static(path.join(__dirname, 'src/style')))
+app.use(express.static(path.join(__dirname, 'src/server')))
 
 if (process.argv.length < 3) {
   console.error('Missing port')
