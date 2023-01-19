@@ -1,7 +1,7 @@
 const express = require('express')
 const app = express()
 const server = require('http').createServer(app)
-const io = require('socket.io', { rememberTransport: false, transports: ['WebSocket', 'Flash Socket', 'AJAX long-polling'] })(server)
+const io = require('socket.io')(server)
 const bodyParser = require('body-parser')
 const path = require('path')
 const client = require('socket.io-client')
@@ -48,23 +48,6 @@ io.on('connection', socket => {
       sock.on('connect', async () => {
         console.log(`Connected at ${port}`)
         fn('Connected')
-
-        const worker = new Worker("./miner.js");
-
-        worker.on("message", block => {
-          console.log(block);
-          sock.emit('blocks', block, (res) => {
-            console.log(res);
-          })
-        });
-
-        worker.on("error", error => {
-          console.log(error);
-        });
-
-        worker.on("exit", exitCode => {
-          console.log(exitCode);
-        })
       })
       /*sock.on('blocks', (block) => {
         console.log(block)
@@ -80,19 +63,23 @@ io.on('connection', socket => {
     }
   })
   socket.on('mine', () => {
-    //startMining(sock)
-    sock.emit('blocks', "aaa", (res) => {
-      console.log(res)
-      if (res == "Next block"){
-        console.log(res)
-      }
+    const worker = new Worker("./miner.js");
+
+    worker.on("message", block => {
+      console.log(block);
+      sock.emit('blocks', block, (res) => {
+        console.log(res);
+      })
+    });
+
+    worker.on("error", error => {
+      console.log(error);
+    });
+
+    worker.on("exit", exitCode => {
+      console.log(exitCode);
     })
-    sock.emit('blocks', "bbbb", (res) => {
-      console.log(res)
-      if (res == "Next block"){
-        console.log(res)
-      }
-    })
+
   })
 })
 
