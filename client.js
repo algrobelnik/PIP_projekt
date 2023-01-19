@@ -49,10 +49,6 @@ io.on('connection', socket => {
         console.log(`Connected at ${port}`)
         fn('Connected')
       })
-      /*sock.on('blocks', (block) => {
-        console.log(block)
-        blockChain.push(block)
-      })*/
       sock.on('disconnect', () => {
         console.log(`Disconnected from ${port}`)
         fn('Disconnected')
