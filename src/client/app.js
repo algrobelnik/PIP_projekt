@@ -22,7 +22,7 @@ $('#form2').submit(function (e) {
     console.log(data, fn)
     $('#msg').append(document.createTextNode(data.data))
     console.log("HERE")
-    fn("AALLOO SEND NUDES")
+    fn("AALLOO")
   })
   $('#mine').prop('disabled', true)
   $('#text').css('visibility', 'visible')

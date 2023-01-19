@@ -37,6 +37,7 @@ server.listen(PORT, () => {
 })
 
 io.on('connection', socket => {
+  let clientId = socket.id;
   let sock
   socket.on('register', async (name, port, fn) => {
     console.log(name)
@@ -53,11 +54,12 @@ io.on('connection', socket => {
     }
   })
   socket.on('blocks', (block, fn) => {
+    console.log(`Client ${clientId} sent block: ${block}`);
     console.log(block)
     blockChain.push(block)
-    fn()
+    fn("Next block")
   })
   socket.on('disconnect', () => {
-    console.log("Disconnected")
+    console.log(`Client ${clientId} has disconnected`);
   })
 })

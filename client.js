@@ -22,7 +22,7 @@ if (process.argv.length > 3) {
   console.error('Too many arguments')
   process.exit(1)
 }
-if (parseInt(process.argv[2]) <= 0 || parseInt(process.argv[2]) < 1000 ||
+if (parseInt(process.argv[2]) <= 1000 ||
   parseInt(process.argv[2]) > 9999) {
   console.error('Wrong port format')
   process.exit(1)
@@ -38,24 +38,26 @@ server.listen(PORT, () => {
 
 io.on('connection', socket => {
   let sock
-  function mine_data(block){
-    socket.emit('mine_data', block, (res) => {
-      console.log(res)
-    })
-  }
   socket.on('join', async (name, port, fn) => {
     console.log(name)
     console.log(port)
     if (port !== undefined && port > 1000 && port < 10000 && port !== PORT) {
       sock = await client.connect('http://127.0.0.1:' + port)
+      sock.emit("register", name, PORT, (res) => {
+        if (res == 'All good'){
+          console.log('Registration successful')
+        } else {
+          console.log('Registration failed:', res);
+        }
+      })
       sock.on('connect', () => {
         console.log(`Connected at ${port}`)
         fn('Connected')
       })
-      sock.on('blocks', (block) => {
+      /*sock.on('blocks', (block) => {
         console.log(block)
         blockChain.push(block)
-      })
+      })*/
       sock.on('disconnect', () => {
         console.log(`Disconnected from ${port}`)
         fn('Disconnected')
@@ -66,7 +68,19 @@ io.on('connection', socket => {
     }
   })
   socket.on('mine', () => {
-    startMining(mine_data)
+    //startMining(sock)
+    sock.emit('blocks', "aaa", (res) => {
+      console.log(res)
+      if (res == "Next block"){
+        console.log(res)
+      }
+    })
+    sock.emit('blocks', "bbbb", (res) => {
+      console.log(res)
+      if (res == "Next block"){
+        console.log(res)
+      }
+    })
   })
 })
 
@@ -74,17 +88,16 @@ io.on('connection', socket => {
 let index = 0
 let diff = 4
 let prevHash = 0
-async function startMining (mine_data) {
+async function startMining () {
   let nonce = 0
   while (true) {
-  // for (let i = 0; i < 1000000; i++) {
+    // for (let i = 0; i < 1000000; i++) {
     // console.log('WE DO BE MINING')
     const block = new Block(index, 'krompir', new Date().getTime(), diff, prevHash, nonce)
     if (block.hash.substr(0, diff) === '0'.repeat(diff)) {
       validateBlockchain()
       blockChain.push(block)
       console.log(block)
-      mine_data(block)
       index++
       prevHash = block.hash
       diff = adjustDifficulty(block)
@@ -92,7 +105,7 @@ async function startMining (mine_data) {
     } else {
       nonce++
     }
-    // await new Promise(r => setTimeout(r, 10))
+    //await new Promise(r => setTimeout(r, 1))
   }
   console.log('DONE')
   // console.log(blockChain)
