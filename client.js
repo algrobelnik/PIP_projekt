@@ -1,14 +1,13 @@
 const express = require('express')
 const app = express()
 const server = require('http').createServer(app)
-const io = require('socket.io')(server)
+const io = require('socket.io', { rememberTransport: false, transports: ['WebSocket', 'Flash Socket', 'AJAX long-polling'] })(server)
 const bodyParser = require('body-parser')
 const path = require('path')
 const client = require('socket.io-client')
 const Block = require('./block')
+const {Worker} = require("worker_threads");
 const blockChain = []
-const diffAdjustInterval = 5
-const blockGenerationInterval = 2
 
 app.use(bodyParser.urlencoded({ extended: false }))
 app.use(express.static(path.join(__dirname, 'src/style')))
@@ -32,27 +31,40 @@ if (PORT === undefined) {
   process.exit(1)
 }
 
+console.log("Executed in the parent thread");
+
 server.listen(PORT, () => {
   console.log(`listening on: ${server.address().address}:${PORT}`)
 })
 
 io.on('connection', socket => {
-  let sock
+  let sock = null;
   socket.on('join', async (name, port, fn) => {
     console.log(name)
     console.log(port)
     if (port !== undefined && port > 1000 && port < 10000 && port !== PORT) {
       sock = await client.connect('http://127.0.0.1:' + port)
-      sock.emit("register", name, PORT, (res) => {
-        if (res == 'All good'){
-          console.log('Registration successful')
-        } else {
-          console.log('Registration failed:', res);
-        }
-      })
-      sock.on('connect', () => {
+      sock.emit("register", name, PORT)
+      sock.on('connect', async () => {
         console.log(`Connected at ${port}`)
         fn('Connected')
+
+        const worker = new Worker("./miner.js");
+
+        worker.on("message", block => {
+          console.log(block);
+          sock.emit('blocks', block, (res) => {
+            console.log(res);
+          })
+        });
+
+        worker.on("error", error => {
+          console.log(error);
+        });
+
+        worker.on("exit", exitCode => {
+          console.log(exitCode);
+        })
       })
       /*sock.on('blocks', (block) => {
         console.log(block)
@@ -85,58 +97,3 @@ io.on('connection', socket => {
 })
 
 
-let index = 0
-let diff = 4
-let prevHash = 0
-async function startMining () {
-  let nonce = 0
-  while (true) {
-    // for (let i = 0; i < 1000000; i++) {
-    // console.log('WE DO BE MINING')
-    const block = new Block(index, 'krompir', new Date().getTime(), diff, prevHash, nonce)
-    if (block.hash.substr(0, diff) === '0'.repeat(diff)) {
-      validateBlockchain()
-      blockChain.push(block)
-      console.log(block)
-      index++
-      prevHash = block.hash
-      diff = adjustDifficulty(block)
-      nonce = 0
-    } else {
-      nonce++
-    }
-    //await new Promise(r => setTimeout(r, 1))
-  }
-  console.log('DONE')
-  // console.log(blockChain)
-}
-
-function validateBlockchain () {
-  const currTS = new Date().getTime()
-  for (let i = 1; i < blockChain.length; i++) {
-    const currBlock = blockChain[i]
-    if (currBlock.validity) { continue }
-    const prevBlock = blockChain[i - 1]
-    if (prevBlock.prevHash === 0 && (currTS - prevBlock.timestamp) <= 60000 && (currTS - currBlock.timestamp) >= 60000) {
-      prevBlock.validity = true
-    }
-    if (currBlock.prevHash === prevBlock.hash && (currTS - prevBlock.timestamp) <= 60000 && (currTS - currBlock.timestamp) >= 60000) {
-      currBlock.validity = true
-    }
-  }
-}
-
-function adjustDifficulty (block) {
-  if (blockChain.length < diffAdjustInterval) return diffAdjustInterval;
-  const adBlock = blockChain[blockChain.length - diffAdjustInterval]
-  const timeExpected = blockGenerationInterval * diffAdjustInterval * 1000
-  const timeTaken = block.timestamp - adBlock.timestamp
-
-  if (timeTaken < (timeExpected / 2)) {
-    return block.diff + 1
-  } else if (timeTaken > (timeExpected * 2)) {
-    return block.diff - 1
-  } else {
-    return block.diff
-  }
-}

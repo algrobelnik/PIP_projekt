@@ -36,24 +36,19 @@ server.listen(PORT, () => {
   console.log(`listening on: ${server.address().address}:${PORT}`)
 })
 
+let peers = [];
+
 io.on('connection', socket => {
   let clientId = socket.id;
-  let sock
-  socket.on('register', async (name, port, fn) => {
+  peers.push(socket);
+  socket.on('register', async (name, port) => {
     console.log(name)
     console.log(port)
-    if (port !== undefined && port > 1000 && port < 10000 && port !== PORT) {
-      sock = await client.connect('http://127.0.0.1:' + port)
-      sock.on('disconnect', () => {
-        console.log('disconnected');
-      })
-      fn('All good')
-    } else {
-      console.log('ERROR')
-      fn('Missing data')
-    }
   })
-  socket.on('blocks', (block, fn) => {
+  socket.on('hello', (msg) => {
+    console.log(msg);
+  });
+  socket.on('blocks', async (block, fn) => {
     console.log(`Client ${clientId} sent block: ${block}`);
     console.log(block)
     blockChain.push(block)
