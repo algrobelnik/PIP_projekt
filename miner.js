@@ -12,8 +12,10 @@ startMining()
 
 function startMining () {
     let nonce = 0
-    while (true) {
-        const block = new Block(index, 'krompir', new Date().getTime(), diff, prevHash, nonce)
+    for (let i = 0; index < workerData.data.length; i++) {
+        console.log("Data:")
+        console.log(workerData.data[0])
+        const block = new Block(index, workerData.data[0]["payload"], new Date().getTime(), diff, prevHash, nonce)
         if (block.hash.substr(0, diff) === '0'.repeat(diff)) {
             validateBlockchain()
             blockChain.push(block)

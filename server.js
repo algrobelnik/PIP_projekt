@@ -36,18 +36,12 @@ server.listen(PORT, () => {
   console.log(`listening on: ${server.address().address}:${PORT}`)
 })
 
-let peers = [];
-
 io.on('connection', socket => {
   let clientId = socket.id;
-  peers.push(socket);
   socket.on('register', async (name, port) => {
     console.log(name)
     console.log(port)
   })
-  socket.on('hello', (msg) => {
-    console.log(msg);
-  });
   socket.on('blocks', async (block, fn) => {
     console.log(`Client ${clientId} sent block: ${block}`);
     console.log(block)
