@@ -3,7 +3,7 @@ const socket = io()
 $('#form1').submit(function (e) {
   e.preventDefault()
   const i1 = document.getElementById('nodeName')
-  const i2 = document.getElementById('connectPort')
+  const i2 = document.getElementById('connectIPPort')
   socket.emit('join', i1.value, i2.value, (res) => {
     console.log(res);
     $('#status').text(`Status: ${res}`)
