@@ -42,8 +42,8 @@ io.on('connection', socket => {
   socket.on('join', async (name, port, fn) => {
     console.log(name)
     console.log(port)
-    if (port !== undefined && port > 1000 && port < 10000 && port !== PORT) {
-      sock = await client.connect('http://127.0.0.1:' + port)
+    if (port !== undefined) {
+      sock = await client.connect('http://' + port)
       sock.emit("register", name, PORT)
       sock.on('connect', async () => {
         console.log(`Connected at ${port}`)
@@ -65,6 +65,9 @@ io.on('connection', socket => {
       console.log(block);
       sock.emit('blocks', block, (res) => {
         console.log(res);
+        socket.emit('mine_data', block, (res) => {
+          console.log(res);
+        });
       })
     });
 
