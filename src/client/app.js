@@ -18,11 +18,11 @@ $('#form2').submit(function (e) {
   socket.emit('mine', (res) => {
     console.log(res)
   })
-  socket.on('mine_data', (data, fn) => {
-    console.log(data, fn)
-    $('#msg').append(document.createTextNode(data.data))
-    console.log("HERE")
-    fn("AALLOO")
+  var ul = $('ul#blockChain');
+  socket.on('mine_data', (data) => {
+    var li = $('<li/>').appendTo(ul);
+    var d = new Date(data.timestamp);
+    var p = $('<p/>', { text : data.data + " " + d.toString() }).appendTo(li);
   })
   $('#mine').prop('disabled', true)
   $('#text').css('visibility', 'visible')
